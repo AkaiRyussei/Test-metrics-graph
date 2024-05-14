@@ -1,0 +1,43 @@
+diff --git a/patch-status/index.html b/patch-status/index.html
+index a114918e..89ee66ae 100644
+--- a/patch-status/index.html
++++ b/patch-status/index.html
+@@ -52,7 +52,7 @@ SPDX-License-Identifier: MIT
+ 
+ <body>
+   <main>
+-    <h3>Current CVE status for OE-Core/Poky</h3>
++    <h3>Current CVE status for meta-openembedded</h3>
+     <div class="cve-status">
+       <details>
+         <summary>master</summary>
+@@ -78,7 +78,7 @@ SPDX-License-Identifier: MIT
+ 
+     <!-- Prepare a DOM with a defined width and height for ECharts -->
+     <section>
+-      <h3>CVE Trends for OE-Core/Poky</h3>
++      <h3>CVE Trends for meta-openembedded</h3>
+       <div id='cve_chart' style='height:400px;'></div>
+     </section>
+     <section>
+@@ -87,17 +87,17 @@ SPDX-License-Identifier: MIT
+     </section>
+ 
+     <section>
+-      <h3>Patch Upstream-Status Counts (OE-Core meta directory)</h3>
++      <h3>Patch Upstream-Status Counts (meta-openemebedded)</h3>
+       <div id="upstream_status_chart" style="height:400px;"></div>
+     </section>
+ 
+     <section>
+-      <h3>Patch Tag Error Counts (OE-Core meta directory)</h3>
++      <h3>Patch Tag Error Counts (meta-openembedded)</h3>
+       <div id="malformed_chart" style="height:400px;"></div>
+     </section>
+ 
+     <section>
+-      <h3>Recipe Count (OE-Core meta directory)</h3>
++      <h3>Recipe Count (meta-openemebedded)</h3>
+       <div id="recipe_chart" style="height:400px;"></div>
+     </section>
+ 
