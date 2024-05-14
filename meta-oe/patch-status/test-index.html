@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<!--
+SPDX-License-Identifier: MIT
+-->
+
+<head>
+  <script src="resources/echarts.min.js"></script>
+  <link rel="stylesheet" href="resources/pico.fluid.classless.min.css">
+  <style>
+    h3 {
+      margin-left: 60px;
+      padding-top: 20px;
+    }
+    ul {
+      margin-left: 60px;
+      font-size: 0.9em;
+    }
+    details {
+      margin-bottom: 0;
+    }
+    details > ul {
+      margin-left: 0;
+      padding-left: 14px;
+    }
+    details > ul > li {
+      list-style-type: none;
+      font-size: 0.8em;
+    }
+    .cve-status {
+      display: flex;
+      margin: 0 60px;
+      align-items: stretch;
+    }
+    .cve-status > details {
+      flex: 1;
+    }
+    details > summary {
+      padding: 13px 14px;
+    }
+    details > summary:hover {
+      filter: invert(50%);
+    }
+    details[open] > summary {
+      margin-bottom: 6px;
+    }
+    summary.sub {
+      font-size: 0.8em;
+      padding: 6px 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h3>Current CVE status for meta-openembedded</h3>
+    <div class="cve-status">
+      <details>
+        <summary>master</summary>
+        <div id="cve_status_master"></div>
+      </details>
+      <details>
+        <summary>scarthgap</summary>
+        <div id="cve_status_scarthgap"></div>
+      </details>
+      <details>
+        <summary>nanbield</summary>
+        <div id="cve_status_nanbield"></div>
+      </details>
+      <details>
+        <summary>kirkstone</summary>
+        <div id="cve_status_kirkstone"></div>
+      </details>
+      <details>
+        <summary>dunfell</summary>
+        <div id="cve_status_dunfell"></div>
+      </details>
+    </div>
+
+    <!-- Prepare a DOM with a defined width and height for ECharts -->
+    <section>
+      <h3>CVE Trends for meta-openembedded</h3>
+      <div id='cve_chart' style='height:400px;'></div>
+    </section>
+    <section>
+      <h3>Current Patch Status Pie</h3>
+      <div id='pie_chart' style='height:300px; width: 600px;'></div>
+    </section>
+
+    <section>
+      <h3>Patch Upstream-Status Counts (meta-openemebedded)</h3>
+      <div id="upstream_status_chart" style="height:400px;"></div>
+    </section>
+
+    <section>
+      <h3>Patch Tag Error Counts (meta-openembedded)</h3>
+      <div id="malformed_chart" style="height:400px;"></div>
+    </section>
+
+    <section>
+      <h3>Recipe Count (meta-openemebedded)</h3>
+      <div id="recipe_chart" style="height:400px;"></div>
+    </section>
+
+    <h3>Raw Data</h3>
+    <ul>
+      <li><a href="patch-status-pie.json">patch-status-pie.json</a></li>
+      <li><a href="patch-status-byday.json">patch-status-byday.json</a></li>
+      <li><a href="cve-count-byday.json">cve-count-byday.json</a></li>
+      <li><a href="releases.csv">releases.csv</a></li>
+    </ul>
+  </main>
+
+  <script type="text/javascript">
+    fetch('cve-status-master.txt')
+   .then(response => response.text())
+   .then(data => {
+      createCVEList('cve_status_master', data);
+   })
+
+   fetch('cve-status-scarthgap.txt')
+   .then(response => response.text())
+   .then(data => {
+       createCVEList('cve_status_scarthgap', data);
+   })
+
+   fetch('cve-status-nanbield.txt')
+   .then(response => response.text())
+   .then(data => {
+       createCVEList('cve_status_nanbield', data);
+   })
+
+   fetch('cve-status-kirkstone.txt')
+   .then(response => response.text())
+   .then(data => {
+       createCVEList('cve_status_kirkstone', data);
+   })
+
+   fetch('cve-status-dunfell.txt')
+   .then(response => response.text())
+   .then(data => {
+       createCVEList('cve_status_dunfell', data);
+   })
+
+    function parseTxtFile(data) {
+      const cveData = {}
+      const txtCVEs = data.split(/\n\s*\n/)
+      // skip the header
+      for (let i = 1; i < txtCVEs.length; i++) {
+        const urls = txtCVEs[i].split("\n");
+        packageName = urls[0]
+
+        cveData[packageName] = []
+        for (let i = 1; i < urls.length; i++) {
+          cveData[packageName].push(urls[i].toString().trim());
+        }
+      }
+      return cveData
+    }
+
+    function createCVEList(listid, data) {
+      const nestedDetails = document.getElementById(listid);
+      const cveData = parseTxtFile(data)
+      let html = "";
+      for (let [name, cves] of Object.entries(cveData)) {
+        html += '<details>';
+        html += `<summary class="sub">${name} CVEs</summary>`;
+        html += "<ul>";
+        for (const cve of cves) {
+          html += '<li>'
+          html += `<a href="${cve}" target="_blank">${cve}</a>`
+          html += '</li>';
+        }
+        html += "</ul>";
+        html += "</details>";
+        nestedDetails.innerHTML = html;
+    };
+   }
+  </script>
+
+  <!-- get the data -->
+  <script type="text/javascript">
+    const status_names = {
+      pending: 'Pending',
+      backport: 'Backport',
+      inappropriate: 'Inappropriate',
+      accepted: 'Accepted',
+      submitted: 'Submitted',
+      denied: 'Denied',
+      total: 'Total',
+      sob: 'Malformed Signed-off-by',
+      upstream_status: 'Malformed Upstream-Status'
+    };
+    const branches = ['master', 'scarthgap', 'nanbield', 'mickledore', 'langdale', 'kirkstone', 'honister', 'hardknott', 'gatesgarth', 'dunfell']
+
+    const general_options = {
+      tooltip: {
+        order: 'valueDesc',
+        trigger: 'axis'
+      },
+      legend: {},
+      xAxis : { type: 'time' },
+      yAxis: { type: 'value' },
+      dataZoom: [
+        {
+          type: 'slider',
+          xAxisIndex: 0,
+          filterMode: 'none'
+        },
+        {
+          type: 'slider',
+          yAxisIndex: 0,
+          filterMode: 'none'
+        }
+      ]
+    }
+
+    fetch('releases.csv')
+      .then(response => response.text())
+      .then(data => {
+        const release_lines = []
+        const lines = data.split("\n")
+        // skip the header
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].split(",");
+          if(line.length) {
+            const cve = {
+              name: line[0],
+              xAxis: new Date(line[1])
+            }
+            release_lines.push(cve)
+          }
+        }
+        const releases = {
+          type: 'line',
+          datasetId: 'releases',
+          markLine: {
+            lineStyle: { color: '#aaa' },
+            symbol: ['none', 'none'],
+            label: {
+              formatter: '{b}',
+              color: '#777'
+            },
+            data: release_lines
+          },
+        }
+        return releases
+      }).then((releases) => {
+        fetch('cve-count-byday.json')
+          .then(response => response.json())
+          .then(data => {
+            const cve_data = []
+            cve_data.push(['Date', 'Branch', 'Branchvalue']);
+            for (var key in data) {
+              const dateObj = new Date(key * 1000);
+              for (let branchVal in data[key]) {
+                let entry = [dateObj, branchVal, parseInt(data[key][branchVal])]
+                cve_data.push(entry)
+              }
+            }
+            generateCVEChart({ cve_data, releases });
+            return releases;
+          }).then((releases) => {
+        fetch('patch-status-byday.json')
+          .then(response => response.json())
+          .then(data => {
+            // We have to sort the data by date
+            data.sort(function(x, y){
+              return x.date - y.date;
+            })
+
+            const patch_data = data.map(status => {
+              return {
+                date: new Date(status.date * 1000),
+                total: status.total,
+                pending: status.pending || 0,
+                backport: status.backport || 0,
+                inappropriate: status.inappropriate || 0,
+                accepted: status.accepted || 0,
+                submitted: status.submitted || 0,
+                denied: status.denied || 0
+              }
+            })
+
+            const malformed_data = data.map(status => {
+              return {
+                date: new Date(status.date * 1000),
+                total: status.total,
+                upstream_status: status['malformed-upstream-status'] || 0,
+                sob: status['malformed-sob'] || 0
+              }
+            })
+
+            const recipe_data = data.map(status => {
+              return {
+                date: new Date(status.date * 1000),
+                recipe_count: status.recipe_count
+              }
+            })
+
+            generateMalformedChart({ malformed_data, releases });
+            generateUpstreamChart({ patch_data, releases });
+            generateRecipeChart({ recipe_data, releases });
+          });
+        });
+      });
+  </script>
+
+  <!-- cve_chart -->
+  <script type="text/javascript">
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // dark mode
+    var cveChart = echarts.init(document.getElementById('cve_chart'), 'dark');
+  } else {
+    var cveChart = echarts.init(document.getElementById('cve_chart'));
+  }
+
+  const cveSeries = []
+  const datasetWithFilters = []
+  function generateCVEChart({ cve_data, releases }) {
+    branches.forEach(branch => {
+      datasetWithFilters.push({
+        id: branch,
+        fromDatasetId: 'dataset_raw',
+        transform: {
+          type: 'filter',
+          config: {
+            dimension: 'Branch', '=': branch,
+          }
+        }
+      });
+      cveSeries.push({
+        type: 'line',
+        showSymbol: false,
+        datasetId: branch,
+        name: branch,
+        encode: {
+          x: 'Date',
+          y: 'Branchvalue'
+        }
+      });
+    });
+    const cveOption = {
+      legend: { right: 'auto' },
+      ...general_options,
+      dataset: [
+        {
+          id: 'dataset_raw',
+          source: cve_data
+        },
+        ...datasetWithFilters
+      ],
+      series: [
+        releases,
+        ...cveSeries,
+      ]
+    };
+
+    cveChart.setOption(cveOption);
+  }
+  </script>
+
+  <!-- pie chart -->
+  <script>
+    // dark mode
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      var pieChart = echarts.init(document.getElementById('pie_chart'), 'dark');
+    } else {
+      var pieChart = echarts.init(document.getElementById('pie_chart'));
+    }
+
+    fetch('patch-status-pie.json')
+      .then(response => response.json())
+      .then(data => {
+        const formatted = [
+          { "value": data.pending || 0, "name": "Pending" },
+          { "value": data.backport || 0, "name": "Backport" },
+          { "value": data.inappropriate || 0, "name": "Inappropriate" },
+          { "value": data.accepted || 0, "name": "Accepted" },
+          { "value": data.submitted || 0, "name": "Submitted" },
+          { "value": data.denied || 0, "name": "Denied" }
+        ]
+        generatePieChart(formatted)
+      });
+
+    function generatePieChart(data) {
+      const pieOption = {
+        tooltip: { trigger: 'item' },
+        series: [{
+          type: 'pie',
+          radius: '50%',
+          data: data,
+          label: { formatter: '{b} {d}%' },
+        }],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      };
+      pieChart.setOption(pieOption);
+    }
+  </script>
+
+  <!-- patch status -->
+  <script type="text/javascript">
+    // dark mode
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      var upstreamStatusChart = echarts.init(document.getElementById('upstream_status_chart'), 'dark');
+    } else {
+      var upstreamStatusChart = echarts.init(document.getElementById('upstream_status_chart'));
+    }
+
+    function generateUpstreamChart({ patch_data, releases }) {
+      releases.markLine.label.position = 'insideEndTop';
+      const keys = Object.keys(patch_data[0]);
+      const upstreamSeries = keys
+        .filter(status => status !== 'date')
+        .map(status => ({
+          type: 'line',
+          showSymbol: false,
+          areaStyle: {},
+          name: status_names[status],
+          encode: { x: 'Date', y: status }
+        }));
+
+      const upstreamOption = {
+        ...general_options,
+        dataset: { source: patch_data },
+        series: [
+          releases,
+          ...upstreamSeries
+        ]
+      };
+
+      upstreamStatusChart.setOption(upstreamOption);
+    }
+  </script>
+
+  <!-- malformed upstream -->
+  <script type="text/javascript">
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      var malformedChart = echarts.init(document.getElementById('malformed_chart'), 'dark');
+    } else {
+      var malformedChart = echarts.init(document.getElementById('malformed_chart'));
+    }
+
+    function generateMalformedChart({ malformed_data, releases }) {
+      releases.markLine.label.position = 'insideEndTop';
+      const keys = Object.keys(malformed_data[0]);
+      const malformedSeries = keys
+        .filter(status => status !== 'date')
+        .map(status => ({
+          type: 'line',
+          showSymbol: false,
+          areaStyle: {},
+          name: status_names[status],
+          encode: { x: 'Date', y: status }
+        }));
+
+      const malformedOption = {
+        ...general_options,
+        legend: {},
+        dataset: { source: malformed_data },
+        series: [
+          releases,
+          ...malformedSeries
+        ]
+      };
+
+      malformedChart.setOption(malformedOption);
+    }
+  </script>
+
+  <!-- recipe count -->
+  <script type="text/javascript">
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      var recipeChart = echarts.init(document.getElementById('recipe_chart'), 'dark');
+    } else {
+      var recipeChart = echarts.init(document.getElementById('recipe_chart'));
+    }
+
+    function generateRecipeChart({ recipe_data, releases }) {
+      releases.markLine.label.position = 'insideEndTop';
+
+      const recipeOption = {
+        ...general_options,
+        dataset: { source: recipe_data },
+        series: [
+          releases,
+          {
+            type: 'line',
+            showSymbol: false,
+            name: 'Recipe Count',
+            areaStyle: {},
+          }
+        ]
+      };
+
+      recipeChart.setOption(recipeOption);
+    }
+  </script>
