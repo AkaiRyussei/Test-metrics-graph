@@ -14,3 +14,7 @@
 ### Preview des charts
 * [meta-oe](https://html-preview.github.io/?url=https://github.com/AkaiRyussei/Test-metrics-graph/blob/main/meta-oe/patch-status/index.html)
 * [OE-core](https://html-preview.github.io/?url=https://github.com/AkaiRyussei/Test-metrics-graph/blob/main/OE-core/patch-status/index.html)
+
+### Comparaison avec l'original
+* [git diff](https://github.com/AkaiRyussei/Test-metrics-graph/blob/main/screenshots/git_diff_metaOE_and_OE-core.png)
+  
