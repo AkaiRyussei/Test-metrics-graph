@@ -10,3 +10,7 @@
 * Les scripts de génération ne sont pas présents de base dans les repos __metrics__
 * Ces scripts sont issus du repo __yocto-autobuilder-helper__
 * Pour tester localement, ces fichiers sont mis dans le dossier __patch-status__
+
+### Preview des charts
+* [meta-oe](https://html-preview.github.io/?url=https://github.com/AkaiRyussei/Test-metrics-graph/blob/main/meta-oe/patch-status/index.html)
+* [OE-core](https://html-preview.github.io/?url=https://github.com/AkaiRyussei/Test-metrics-graph/blob/main/OE-core/patch-status/index.html)
