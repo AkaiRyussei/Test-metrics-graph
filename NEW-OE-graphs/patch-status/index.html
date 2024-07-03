@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+SPDX-License-Identifier: MIT
+-->
+
+<head>
+  <meta charset="UTF-8">
+  <meta title="Yocto Autobuilder Patch Metrics" <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="resources/echarts.min.js"></script>
+  <!-- import dark theme -->
+  <script src="resources/dark.js"></script>
+  <link rel="stylesheet" href="resources/pico.fluid.classless.min.css">
+  <link rel="apple-touch-icon" sizes="144x144" href="/resources/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/resources/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/resources/favicon-16x16.png">
+  <style>
+    main {
+      font-size: 0.9em;
+    }
+
+    section {
+      max-width: 55rem;
+      margin-inline: 3rem;
+    }
+
+    h1 {
+      padding-inline: 3rem;
+    }
+
+    h2 {
+      padding-top: 1em;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: auto auto;
+      color: var(--pico-h5-color);
+      margin-inline-start: 1.75em;
+      margin-block-start: 1em;
+    }
+
+    dt:hover,
+    dt:hover+dd,
+    dt:has(+ dd:hover),
+    dd:hover {
+      filter: brightness(15%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+
+      dt:hover,
+      dt:hover+dd,
+      dt:has(+ dd:hover),
+      dd:hover {
+        filter: brightness(150%);
+      }
+    }
+
+    details {
+      margin-bottom: 0;
+    }
+
+    details>ul>li {
+      list-style-type: none;
+      font-size: 0.8em;
+    }
+
+    details summary::before {
+      display: block;
+      width: 1rem;
+      height: 1rem;
+      margin-inline-end: calc(var(--pico-spacing, 1rem)* .5);
+      float: left;
+      transform: rotate(-90deg);
+      background-image: var(--pico-icon-chevron);
+      background-position: right center;
+      background-size: 1rem auto;
+      background-repeat: no-repeat;
+      content: "";
+      transition: transform var(--pico-transition);
+    }
+
+    details summary::after {
+      display: inline;
+      vertical-align: text-bottom;
+      width: auto;
+      background: none;
+      float: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.6em;
+      border: 2px solid;
+      border-radius: 1em;
+      padding-inline: 0.35em;
+      content: "Click to show";
+    }
+
+    .cve-status>details {
+      margin-block-end: 1em;
+    }
+
+    .cve-status details summary {
+      font-family: var(--pico-font-family-monospace);
+    }
+
+    .cve-status details summary:after {
+      display: none;
+    }
+
+    details[open]>summary {
+      margin-bottom: 6px;
+    }
+
+    details[open]>summary::before {
+      transform: rotate(0);
+    }
+
+    details[open]>summary::after {
+      transform: none;
+      content: "Click to hide";
+    }
+
+    details>summary:hover {
+      filter: invert(50%);
+    }
+
+    summary.sub {
+      font-size: 0.8em;
+      padding: 6px 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>yocto-metrics</h1>
+    <section>
+      <p>This page shows Common Vulnerabilities and Exposures (CVEs) metrics gathered from the Yocto Project autobuilder in graphs. It is updated daily to show the current status of the project.</p>
+      <p>
+        Each graph (except the pie chart) has an <strong>x-axis</strong> and a <strong>y-axis:</strong>
+      </p>
+      <ul>
+        <li>The <strong>x-axis</strong> represents time. You can filter by time-range using the zoom bar at the bottom.</li>
+        <li>The <strong>y-axis</strong> represents the amount of something (CVEs, patches, errors etc.) at a particular point in time. You can zoom here as well, using the bar on the right.</li>
+      </ul>
+      <p>
+        Click on the items in the <strong>legend</strong> to toggle the visibility of the corresponding line on the graph.</p>
+      <p>
+        Note the grey, vertical lines representing <strong>releases</strong>.
+        These lines are not part of the graph’s data but are added to highlight release points in time. They denote the release of new versions or updates of the software. This helps you correlate vulnerability trends with software releases, which can indicate whether vulnerabilities were addressed in a particular release.
+      </p>
+    </section>
+
+    <section>
+      <h2>Current CVE status for OE-Core/Poky</h2>
+      <p>
+        This section provides a detailed overview of the current status of CVEs for each branch in the <code>OE-Core/Poky</code> repository.</p>
+      <p>
+        When you click on a branch name, a summary count of CVEs related to that branch is displayed.
+        This count includes the total number of CVEs reported for that branch and so gives a quick overview of the security status of the branch.</p>
+      <p>
+        Below the summary count, you'll find links to more detailed information about CVEs for that branch. You can easily access more detailed information at the National Vulnerability Database (NVD), about CVEs for each branch by clicking on the provided links.</p>
+      <div class="cve-status">
+        <details>
+          <summary>master</summary>
+          <div id="cve_status_master"></div>
+        </details>
+        <details>
+          <summary>scarthgap</summary>
+          <div id="cve_status_scarthgap"></div>
+        </details>
+        <details>
+          <summary>nanbield</summary>
+          <div id="cve_status_nanbield"></div>
+        </details>
+        <details>
+          <summary>kirkstone</summary>
+          <div id="cve_status_kirkstone"></div>
+        </details>
+        <details>
+          <summary>dunfell</summary>
+          <div id="cve_status_dunfell"></div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <h2>CVE Trends for <code>OE-Core/Poky</code></h2>
+      <p>
+        This graph shows the trends of CVEs affecting the <code>OE-Core/Poky</code> repository over time.</p>
+      <p>
+        It shows how many vulnerabilities have been identified within the <code>OE-Core/Poky</code> repository, per branch.
+        The colored lines show the trend of CVEs for each branch, allowing you to see how vulnerabilities evolve over time.
+      </p>
+    </section>
+
+    <div id='cve_chart' style='height:400px;'></div>
+
+    <section>
+      <h2>Current Patch Status Metrics</h2>
+      <div class="flex">
+        <div id='pie_chart' style='height:300px; width: 600px;'></div>
+        <div>
+          <p>
+            This graph shows the latest patch breakdown metrics.</p>
+          <p>
+            <strong>Hover over a section</strong> to see the amount of patches with each status.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Patch Upstream-Status Counts (OE-Core meta directory)</h2>
+      <p>
+        The following two graphs provide insights into the status of patches in the OE-Core meta directory with respect to their upstream status.
+        The upstream status of a patch refers to its relationship with the original source or upstream project from which the patch originates.
+      </p>
+
+      <details>
+        <summary>
+          Upstream status categories explained
+        </summary>
+        <dl>
+          <dt><strong>Accepted</strong>:</dt>
+          <dd>
+            <p>The patch has been accepted upstream, meaning it has been applied to the original source code repository from which it originated.</p>
+            <p><em>A high count of accepted patches indicates successful contributions and integration of changes into the upstream project.</em></p>
+          </dd>
+
+          <dt><strong>Backport</strong>:</dt>
+          <dd>
+            <p>The patch has been backported from a newer version of the software or a different branch to an older version or a specific branch.</p>
+            <p><em>Backported patches show efforts to apply fixes or features from newer versions to older versions or specific branches.</em></p>
+          </dd>
+
+          <dt><strong>Deferred</strong>:</dt>
+          <dd>
+            <p>The patch has been postponed or deferred for later consideration or implementation.</p>
+            <p><em>Deferred patches might indicate areas where further review or discussion is needed before applying the patches upstream.</em></p>
+          </dd>
+
+          <dt><strong>Inappropriate</strong>:</dt>
+          <dd>
+            <p>This status indicates that the patch is deemed inappropriate for upstream inclusion.</p>
+            <p><em>High counts of inappropriate patches might indicate a need for better review processes or clearer guidelines for contributions.</em></p>
+          </dd>
+
+          <dt><strong>Submitted</strong>:</dt>
+          <dd>
+            <p>
+              The patch has been submitted upstream but hasn't received a definitive response yet.
+              It’s a transitional state between "Pending" and "Accepted" or "Rejected". Patches in this state are awaiting review and acceptance or rejection by upstream maintainers.
+            </p>
+            <p><em>Submitted patches reflect ongoing contributions to upstream projects. A high number of submitted patches might indicate active engagement with upstream maintainers.</em></p>
+          </dd>
+
+          <dt><strong>Pending</strong>:</dt>
+          <dd>
+            <p>The patch is pending review or has not yet been applied upstream.</p>
+            <p><em>High counts of pending patches might suggest a backlog in the review process or challenges in getting patches accepted upstream.</em></p>
+          </dd>
+
+          <dt><strong>Denied</strong>:</dt>
+          <dd>
+            <p>The patch has been rejected upstream, often due to conflicts, incompatibilities, or not meeting project standards.</p>
+            <p><em> Rejected patches could signify issues with patch quality, conflicts, or discrepancies between the patch and upstream requirements.</em></p>
+          </dd>
+
+          <dt><strong>Total</strong>:</dt>
+          <dd>
+            <p>The total count of patches in the OE-Core meta directory, regardless of their upstream status.</p>
+            <p><em>This provides context for the distribution of patches across different statuses.</em></p>
+          </dd>
+        </dl>
+      </details>
+    </section>
+
+    <div id="upstream_status_chart" style="height:400px;"></div>
+
+    <section>
+      <h2>Patch Tag Error Counts (OE-Core meta directory)</h2>
+      <p>The Patch Tag Error Counts graph shows the statuses "Malformed Upstream-Status" and "Malformed Signed-off-by" to provide insight into the quality and completeness of patches in the OE-Core meta directory.</p>
+      <details>
+        <summary>
+          Malformed status categories explained
+        </summary>
+        <dl>
+          <dt><strong>Malformed Upstream-Status</strong>:</dt>
+          <dd>
+            <p>This category indicates patches with improperly formatted or missing upstream status tags.</p>
+            <p>A malformed upstream status could be a result of missing or incorrectly formatted tags such as "Upstream-Status:", which is a common tag used to specify the status of the patch upstream.</p>
+            <p>Patches with malformed upstream status might not be properly tracked or considered for upstream inclusion, as they lack necessary metadata for review.</p>
+            <p>
+              <em>
+                High counts in this category might indicate issues with patch submission processes or lack of adherence to patch submission guidelines.
+                These patches might be at risk of being overlooked or rejected during the review process due to incomplete metadata.
+              </em>
+            </p>
+          </dd>
+          <dt><strong>Malformed Signed-off-by</strong>:</dt>
+          <dd>
+            <p>
+              This category represents patches with improperly formatted or missing "Signed-off-by" lines.
+              The "Signed-off-by" line in a patch is a tag that signifies the authorship and acknowledgment of the patch.
+              A malformed "Signed-off-by" line could be due to missing or incorrectly formatted authorship information.
+              Properly formatted "Signed-off-by" lines are essential for maintaining authorship attribution and legal compliance.
+            </p>
+            <p>
+              <em>
+                This category reflects issues with patch authorship and acknowledgment.
+                Patches with malformed "Signed-off-by" lines might lack proper attribution, which can lead to confusion about ownership and legal compliance.
+                Such patches might require additional verification or correction before being considered for inclusion.
+              </em>
+            </p>
+          </dd>
+          <dt><strong>Total</strong>:</dt>
+          <dd>
+            <p>The total count of patches in the OE-Core meta directory, regardless of their upstream status.</p>
+            <p><em>This provides context for the distribution of patches across different statuses.</em></p>
+          </dd>
+        </dl>
+      </details>
+    </section>
+
+    <div id="malformed_chart" style="height:400px;"></div>
+
+    <section>
+      <h2>Recipe Count (OE-Core meta directory)</h2>
+      <p>
+        This graph displays the number of recipes. It provides insights into the growth and evolution of the OE-Core meta directory by tracking the number of recipes over time.</p>
+      <p>
+        A recipe in the context of Yocto and the OE-Core meta directory refers to a set of instructions or metadata files that describe how to build a particular software package. These recipes typically include information about where to obtain the source code, how to configure it, and how to build and install it into the target system.</p>
+      <p>
+        <em>An increasing recipe count indicates the addition of new software packages or updates to existing ones. It reflects the growth of the OE-Core meta directory over time.
+          A higher recipe count often means better software coverage, allowing users to build a wider range of software packages for their embedded systems.
+          With more recipes, there’s increased maintenance effort to ensure that recipes are up-to-date, correctly configured, and build without errors.</em>
+      </p>
+    </section>
+
+    <div id="recipe_chart" style="height:400px;"></div>
+
+    <section>
+      <h2>Raw Data</h2>
+      <ul>
+        <li><a href="patch-status-pie.json">patch-status-pie.json</a></li>
+        <li><a href="patch-status-byday.json">patch-status-byday.json</a></li>
+        <li><a href="cve-count-byday.json">cve-count-byday.json</a></li>
+        <li><a href="releases.csv">releases.csv</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <script type="text/javascript">
+    fetch('cve-status-master.txt')
+      .then(response => response.text())
+      .then(data => {
+        createCVEList('cve_status_master', data);
+      })
+
+    fetch('cve-status-scarthgap.txt')
+      .then(response => response.text())
+      .then(data => {
+        createCVEList('cve_status_scarthgap', data);
+      })
+
+    fetch('cve-status-nanbield.txt')
+      .then(response => response.text())
+      .then(data => {
+        createCVEList('cve_status_nanbield', data);
+      })
+
+    fetch('cve-status-kirkstone.txt')
+      .then(response => response.text())
+      .then(data => {
+        createCVEList('cve_status_kirkstone', data);
+      })
+
+    fetch('cve-status-dunfell.txt')
+      .then(response => response.text())
+      .then(data => {
+        createCVEList('cve_status_dunfell', data);
+      })
+
+    function parseTxtFile(data) {
+      const cveData = {}
+      const txtCVEs = data.split(/\n\s*\n/)
+      // skip the header
+      for (let i = 1; i < txtCVEs.length; i++) {
+        const urls = txtCVEs[i].split("\n");
+        packageName = urls[0]
+
+        cveData[packageName] = []
+        for (let i = 1; i < urls.length; i++) {
+          cveData[packageName].push(urls[i].toString().trim());
+        }
+      }
+      return cveData
+    }
+
+    function createCVEList(listid, data) {
+      const nestedDetails = document.getElementById(listid);
+      const cveData = parseTxtFile(data)
+      let html = "";
+      for (let [name, cves] of Object.entries(cveData)) {
+        html += '<details>';
+        html += `<summary class="sub">${name} CVEs</summary>`;
+        html += "<ul>";
+        for (const [index, cve] of cves.entries()) {
+          html += '<li>'
+          html += `${index + 1}: <a href="${cve}" target="_blank">${cve}</a>`
+          html += '</li>';
+        }
+        html += "</ul>";
+        html += "</details>";
+        nestedDetails.innerHTML = html;
+      };
+    }
+  </script>
+
+  <!-- get the data -->
+  <script type="text/javascript">
+    const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'
+    const status_names = {
+      pending: 'Pending',
+      backport: 'Backport',
+      inappropriate: 'Inappropriate',
+      accepted: 'Accepted',
+      submitted: 'Submitted',
+      denied: 'Denied',
+      total: 'Total',
+      sob: 'Malformed Signed-off-by',
+      upstream_status: 'Malformed Upstream-Status'
+    };
+    const branches = ['master', 'scarthgap', 'nanbield', 'mickledore', 'langdale', 'kirkstone', 'honister', 'hardknott', 'gatesgarth', 'dunfell']
+
+    const general_options = {
+      tooltip: {
+        order: 'valueDesc',
+        trigger: 'axis'
+      },
+      legend: {},
+      xAxis: { type: 'time' },
+      yAxis: { type: 'value' },
+      dataZoom: [
+        {
+          type: 'slider',
+          xAxisIndex: 0,
+          filterMode: 'none'
+        },
+        {
+          type: 'slider',
+          yAxisIndex: 0,
+          filterMode: 'none'
+        }
+      ]
+    }
+
+    fetch('releases.csv')
+      .then(response => response.text())
+      .then(data => {
+        const release_lines = []
+        const lines = data.split("\n")
+        // skip the header
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].split(",");
+          if (line.length) {
+            const cve = {
+              name: line[0],
+              xAxis: new Date(line[1])
+            }
+            release_lines.push(cve)
+          }
+        }
+        const releases = {
+          type: 'line',
+          datasetId: 'releases',
+          markLine: {
+            lineStyle: { color: '#aaa' },
+            symbol: ['none', 'none'],
+            label: {
+              formatter: '{b}',
+              color: '#777'
+            },
+            data: release_lines
+          },
+        }
+        return releases
+      }).then((releases) => {
+        fetch('cve-count-byday.json')
+          .then(response => response.json())
+          .then(data => {
+            const cve_data = []
+            cve_data.push(['Date', 'Branch', 'Branchvalue']);
+            for (var key in data) {
+              const dateObj = new Date(key * 1000);
+              for (let branchVal in data[key]) {
+                let entry = [dateObj, branchVal, parseInt(data[key][branchVal])]
+                cve_data.push(entry)
+              }
+            }
+            generateCVEChart({ cve_data, releases });
+            return releases;
+          }).then((releases) => {
+            fetch('patch-status-byday.json')
+              .then(response => response.json())
+              .then(data => {
+                // We have to sort the data by date
+                data.sort(function (x, y) {
+                  return x.date - y.date;
+                })
+
+                const patch_data = data.map(status => {
+                  return {
+                    date: new Date(status.date * 1000),
+                    total: status.total,
+                    pending: status.pending || 0,
+                    backport: status.backport || 0,
+                    inappropriate: status.inappropriate || 0,
+                    accepted: status.accepted || 0,
+                    submitted: status.submitted || 0,
+                    denied: status.denied || 0
+                  }
+                })
+
+                const malformed_data = data.map(status => {
+                  return {
+                    date: new Date(status.date * 1000),
+                    total: status.total,
+                    upstream_status: status['malformed-upstream-status'] || 0,
+                    sob: status['malformed-sob'] || 0
+                  }
+                })
+
+                const recipe_data = data.map(status => {
+                  return {
+                    date: new Date(status.date * 1000),
+                    recipe_count: status.recipe_count
+                  }
+                })
+
+                generateMalformedChart({ malformed_data, releases });
+                generateUpstreamChart({ patch_data, releases });
+                generateRecipeChart({ recipe_data, releases });
+              });
+          });
+      });
+  </script>
+
+  <!-- cve_chart -->
+  <script type="text/javascript">
+    const cveChart = echarts.init(document.getElementById('cve_chart'), theme);
+
+    const optionsforAllLineCharts = {
+      grid: {
+        left: 60,
+        right: 60,
+        top: 75,
+        bottom: 90
+      },
+      animation: false
+    }
+
+    const cveSeries = []
+    const datasetWithFilters = []
+    function generateCVEChart({ cve_data, releases }) {
+      branches.forEach(branch => {
+        datasetWithFilters.push({
+          id: branch,
+          fromDatasetId: 'dataset_raw',
+          transform: {
+            type: 'filter',
+            config: {
+              dimension: 'Branch', '=': branch,
+            }
+          }
+        });
+        cveSeries.push({
+          type: 'line',
+          showSymbol: false,
+          datasetId: branch,
+          name: branch,
+          encode: {
+            x: 'Date',
+            y: 'Branchvalue'
+          }
+        });
+      });
+      const cveOption = {
+        legend: { right: 'auto' },
+        ...general_options,
+        dataset: [
+          {
+            id: 'dataset_raw',
+            source: cve_data
+          },
+          ...datasetWithFilters
+        ],
+        series: [
+          releases,
+          ...cveSeries,
+        ],
+        ...optionsforAllLineCharts
+      };
+
+      cveChart.setOption(cveOption);
+    }
+  </script>
+
+  <!-- pie chart -->
+  <script>
+    const pieChart = echarts.init(document.getElementById('pie_chart'), theme);
+
+    fetch('patch-status-pie.json')
+      .then(response => response.json())
+      .then(data => {
+        const formatted = [
+          { "value": data.pending || 0, "name": "Pending" },
+          { "value": data.backport || 0, "name": "Backport" },
+          { "value": data.inappropriate || 0, "name": "Inappropriate" },
+          { "value": data.accepted || 0, "name": "Accepted" },
+          { "value": data.submitted || 0, "name": "Submitted" },
+          { "value": data.denied || 0, "name": "Denied" }
+        ]
+        generatePieChart(formatted)
+      });
+
+    function generatePieChart(data) {
+      const pieOption = {
+        tooltip: { trigger: 'item' },
+        series: [{
+          type: 'pie',
+          radius: '50%',
+          data: data,
+          label: { formatter: '{b} {d}%' },
+        }],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      };
+      pieChart.setOption(pieOption);
+    }
+  </script>
+
+  <!-- patch status -->
+  <script type="text/javascript">
+    const upstreamStatusChart = echarts.init(document.getElementById('upstream_status_chart'), theme);
+
+    function generateUpstreamChart({ patch_data, releases }) {
+      releases.markLine.label.position = 'insideEndTop';
+      const keys = Object.keys(patch_data[0]);
+      const upstreamSeries = keys
+        .filter(status => status !== 'date')
+        .map(status => ({
+          type: 'line',
+          showSymbol: false,
+          areaStyle: {},
+          name: status_names[status],
+          encode: { x: 'Date', y: status }
+        }));
+
+      const upstreamOption = {
+        ...general_options,
+        dataset: { source: patch_data },
+        series: [
+          releases,
+          ...upstreamSeries
+        ],
+        ...optionsforAllLineCharts
+      };
+
+      upstreamStatusChart.setOption(upstreamOption);
+    }
+  </script>
+
+  <!-- malformed upstream -->
+  <script type="text/javascript">
+    const malformedChart = echarts.init(document.getElementById('malformed_chart'), theme);
+
+    function generateMalformedChart({ malformed_data, releases }) {
+      releases.markLine.label.position = 'insideEndTop';
+      const keys = Object.keys(malformed_data[0]);
+      const malformedSeries = keys
+        .filter(status => status !== 'date')
+        .map(status => ({
+          type: 'line',
+          showSymbol: false,
+          areaStyle: {},
+          name: status_names[status],
+          encode: { x: 'Date', y: status }
+        }));
+
+      const malformedOption = {
+        ...general_options,
+        legend: {},
+        dataset: { source: malformed_data },
+        series: [
+          releases,
+          ...malformedSeries
+        ],
+        ...optionsforAllLineCharts
+      };
+
+      malformedChart.setOption(malformedOption);
+    }
+  </script>
+
+  <!-- recipe count -->
+  <script type="text/javascript">
+    const recipeChart = echarts.init(document.getElementById('recipe_chart'), theme);
+
+    function generateRecipeChart({ recipe_data, releases }) {
+      releases.markLine.label.position = 'insideEndTop';
+
+      const recipeOption = {
+        ...general_options,
+        dataset: { source: recipe_data },
+        series: [
+          releases,
+          {
+            type: 'line',
+            showSymbol: false,
+            name: 'Recipe Count',
+            areaStyle: {},
+          }
+        ],
+        ...optionsforAllLineCharts
+      };
+
+      recipeChart.setOption(recipeOption);
+    }
+  </script>
+</body>
+
+</html>
