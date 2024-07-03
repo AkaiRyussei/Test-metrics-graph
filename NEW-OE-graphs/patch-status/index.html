@@ -530,7 +530,7 @@ SPDX-License-Identifier: MIT
                     accepted: status.accepted || 0,
                     submitted: status.submitted || 0,
                     denied: status.denied || 0,
-                    inactive_upstream: status.inactive_upstream || 0
+                    inactive_upstream: status['inactive-upstream'] || 0
                   }
                 })
 
@@ -632,7 +632,7 @@ SPDX-License-Identifier: MIT
           { "value": data.accepted || 0, "name": "Accepted" },
           { "value": data.submitted || 0, "name": "Submitted" },
           { "value": data.denied || 0, "name": "Denied" },
-          { "value": data.inactive_upstream || 0, "name": "Inactive-Upstream" }
+          { "value": data['inactive-upstream'] || 0, "name": "Inactive-Upstream" }
         ]
         generatePieChart(formatted)
       });
